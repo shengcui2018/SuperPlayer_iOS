@@ -97,7 +97,8 @@
     [_iconImageView sizeToFit];
     _titleLabel.text = cellInfo.title;
     [_titleLabel sizeToFit];
-    self.highLight = _cellData.isUnFold;
+    self.highLight = _cellData.expanded;
+    
 }
 
 - (void)setHighLight:(BOOL)highLight {

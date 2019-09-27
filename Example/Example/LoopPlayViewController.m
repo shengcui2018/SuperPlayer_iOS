@@ -11,7 +11,7 @@
 #import <SuperPlayer/UIView+MMLayout.h>
 #import "Masonry.h"
 
-@interface LoopPlayViewController ()
+@interface LoopPlayViewController () <SuperPlayerDelegate>
 @property UIView *playerContainer;
 @property SuperPlayerView *playerView;
 @end
@@ -47,7 +47,7 @@
 }
 
 - (BOOL)prefersStatusBarHidden {
-    return YES;
+    return NO;
 }
 
 - (void)superPlayerBackAction:(SuperPlayerView *)player {

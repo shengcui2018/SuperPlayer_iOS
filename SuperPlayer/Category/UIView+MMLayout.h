@@ -37,6 +37,16 @@
 - (void)setMm_size:(CGSize)mm_size;
 - (CGSize)mm_size;       ///<< get self.bounds.size
 
+@property (readonly) UIView *mm_sibling;      //兄弟视图
+@property (readonly) UIViewController *mm_viewController;  //self Responder UIViewControler
+
+// iPhoneX adapt
+
+@property (readonly) CGFloat m_safeAreaBottomGap;
+@property (readonly) CGFloat m_safeAreaTopGap;
+@property (readonly) CGFloat m_safeAreaLeftGap;
+@property (readonly) CGFloat m_safeAreaRightGap;
+
 /*
  示例链接编程
  self.m_width(100).m_height(100).m_left(10).m_top(10)

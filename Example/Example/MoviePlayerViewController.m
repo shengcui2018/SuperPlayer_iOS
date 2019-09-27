@@ -28,7 +28,7 @@ __weak UITextField *appField;
 __weak UITextField *fileidField;
 __weak UITextField *urlField;
 
-@interface MoviePlayerViewController () <SuperPlayerDelegate, ScanQRDelegate, UITableViewDelegate, UITableViewDataSource,TXMoviePlayerNetDelegate>
+@interface MoviePlayerViewController () <SuperPlayerDelegate, ScanQRDelegate, UITableViewDelegate, UITableViewDataSource,TXMoviePlayerNetDelegate, CFDanmakuDelegate>
 /** 播放器View的父视图*/
 @property (nonatomic) UIView *playerFatherView;
 @property (strong, nonatomic) SuperPlayerView *playerView;
@@ -67,7 +67,9 @@ __weak UITextField *urlField;
 - (instancetype)init {
     if (SuperPlayerWindowShared.backController) {
         [SuperPlayerWindowShared hide];
-        return (MoviePlayerViewController *)SuperPlayerWindowShared.backController;
+        MoviePlayerViewController *playerViewCtrl = (MoviePlayerViewController *)SuperPlayerWindowShared.backController;
+        playerViewCtrl.danmakuView.clipsToBounds = NO;
+        return playerViewCtrl;
     } else {
         return [super init];
     }
@@ -94,19 +96,18 @@ __weak UITextField *urlField;
     [super viewWillAppear:animated];
     self.navigationController.navigationBar.hidden = NO;
     
-    
+
     UIImageView *imageView=[[UIImageView alloc] initWithFrame:self.view.bounds];
     imageView.image=[UIImage imageNamed:@"背景"];
     [self.view insertSubview:imageView atIndex:0];
     
-
-    
-    UIButton *button1 = [UIButton buttonWithType:UIButtonTypeCustom];
-    [button1 setFrame:CGRectMake(0, 0, 60, 25)];
-    [button1 setBackgroundImage:[UIImage imageNamed:@"style"] forState:UIControlStateNormal];
-    [button1 addTarget:self action:@selector(clickStyle:) forControlEvents:UIControlEventTouchUpInside];
-    [button1 sizeToFit];
-    UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithCustomView:button1];
+    // 右侧
+    UIButton *buttonh = [UIButton buttonWithType:UIButtonTypeCustom];
+    [buttonh setFrame:CGRectMake(0, 0, 60, 25)];
+    [buttonh setBackgroundImage:[UIImage imageNamed:@"help_small"] forState:UIControlStateNormal];
+    [buttonh addTarget:[[UIApplication sharedApplication] delegate] action:@selector(clickHelp:) forControlEvents:UIControlEventTouchUpInside];
+    [buttonh sizeToFit];
+    UIBarButtonItem *rightItemh = [[UIBarButtonItem alloc] initWithCustomView:buttonh];
     
     UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
     [button setFrame:CGRectMake(0, 0, 60, 25)];
@@ -114,7 +115,7 @@ __weak UITextField *urlField;
     [button addTarget:self action:@selector(clickScan:) forControlEvents:UIControlEventTouchUpInside];
     [button sizeToFit];
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView:button];
-    self.navigationItem.rightBarButtonItems = @[rightItem1, rightItem];
+    self.navigationItem.rightBarButtonItems = @[rightItem, rightItemh];
 
 
 
@@ -352,7 +353,7 @@ __weak UITextField *urlField;
 
 // 返回值要必须为NO
 - (BOOL)shouldAutorotate {
-    return NO;
+    return YES;
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle {
@@ -453,6 +454,7 @@ __weak UITextField *urlField;
     // 是竖屏时候响应关
     if (orientation == UIInterfaceOrientationPortrait &&
         (self.playerView.state == StatePlaying)) {
+        self.danmakuView.clipsToBounds = YES;
         [SuperPlayerWindowShared setSuperPlayer:self.playerView];
         [SuperPlayerWindowShared show];
         SuperPlayerWindowShared.backController = self;
@@ -492,6 +494,7 @@ __weak UITextField *urlField;
     model.videoURL         = result;
     
     [self.playerView.controlView setTitle:@"这是新播放的视频"];
+    [self.playerView.coverImageView setImage:nil];
     [self.playerView playWithModel:model];
     
     ListVideoModel *m = [ListVideoModel new];
@@ -625,12 +628,14 @@ __weak UITextField *urlField;
         
         NSString* emotionName = [NSString stringWithFormat:@"smile_%u", arc4random_uniform(90)];
         UIImage* emotion = [UIImage imageNamed:emotionName];
-        NSTextAttachment* attachment = [[NSTextAttachment alloc] init];
-        attachment.image = emotion;
-        attachment.bounds = CGRectMake(0, -font.lineHeight*0.3, font.lineHeight*1.5, font.lineHeight*1.5);
-        NSAttributedString* emotionAttr = [NSAttributedString attributedStringWithAttachment:attachment];
+        if (nil != emotion) {
+            NSTextAttachment *attachment = [[NSTextAttachment alloc] init];
+            attachment.image = emotion;
+            attachment.bounds = CGRectMake(0, -font.lineHeight*0.3, font.lineHeight*1.5, font.lineHeight*1.5);
+            NSAttributedString *emotionAttr = [NSAttributedString attributedStringWithAttachment:attachment];
+            [contentStr appendAttributedString:emotionAttr];
+        }
         
-        [contentStr appendAttributedString:emotionAttr];
         danmaku.contentStr = contentStr;
         
         NSString* attributesStr = dict[@"p"];
@@ -661,7 +666,7 @@ __weak UITextField *urlField;
         make.right.equalTo(self.playerView);
     }];
     
-    SPDefaultControlView *dv = self.playerView.controlView;
+    SPDefaultControlView *dv = (SPDefaultControlView *)self.playerView.controlView;
     [dv.danmakuBtn addTarget:self action:@selector(danmakuShow:) forControlEvents:UIControlEventTouchUpInside];
 }
 
@@ -707,6 +712,7 @@ __weak UITextField *urlField;
 //        SPDefaultControlView *controlView = (SPDefaultControlView *)player.controlView;
 //        controlView.danmakuBtn.hidden = YES;
 //    }
+    [[UIApplication sharedApplication] setStatusBarHidden:player.isFullScreen];
 }
 
 - (void)superPlayerDidEnd:(SuperPlayerView *)player

@@ -186,6 +186,89 @@ const void *_layoutKey;
 -(CGSize)mm_size{
     return self.bounds.size;
 }
+
+- (UIView *)mm_sibling {
+    NSUInteger idx = [self.superview.subviews indexOfObject:self];
+    if (idx == 0 || idx == NSNotFound)
+        return nil;
+    return self.superview.subviews[idx-1];
+}
+
+- (UIViewController *)mm_viewController {
+    UIView *view = self;
+    while (view) {
+        UIResponder *nextResponder = [view nextResponder];
+        if ([nextResponder isKindOfClass:[UIViewController class]]) {
+            return (UIViewController *)nextResponder;
+        }
+        view = view.superview;
+      }
+    return nil;
+}
+static void *kUIViewLayoutMethodPropertyBottomGap = &kUIViewLayoutMethodPropertyBottomGap;
+static void *kUIViewLayoutMethodPropertyTopGap = &kUIViewLayoutMethodPropertyTopGap;
+static void *kUIViewLayoutMethodPropertyLeftGap = &kUIViewLayoutMethodPropertyLeftGap;
+static void *kUIViewLayoutMethodPropertyRightGap = &kUIViewLayoutMethodPropertyRightGap;
+
+- (CGFloat)m_safeAreaBottomGap
+{
+    NSNumber *gap = objc_getAssociatedObject(self, kUIViewLayoutMethodPropertyBottomGap);
+    if (gap == nil) {
+        if (@available(iOS 11, *)) {
+            if (self.superview.safeAreaLayoutGuide.layoutFrame.size.height > 0) {
+                gap = @((self.superview.mm_h - self.superview.safeAreaLayoutGuide.layoutFrame.origin.y - self.superview.safeAreaLayoutGuide.layoutFrame.size.height));
+            } else {
+                gap = nil;
+            }
+        } else {
+            gap = @(0);
+        }
+        objc_setAssociatedObject(self, kUIViewLayoutMethodPropertyBottomGap, gap, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return gap.floatValue;
+}
+
+- (CGFloat)m_safeAreaTopGap
+{
+    NSNumber *gap = objc_getAssociatedObject(self, kUIViewLayoutMethodPropertyTopGap);
+    if (gap == nil) {
+        if (@available(iOS 11, *)) {
+            gap = @(self.superview.safeAreaLayoutGuide.layoutFrame.origin.y);
+        } else {
+            gap = @(0);
+        }
+        objc_setAssociatedObject(self, kUIViewLayoutMethodPropertyTopGap, gap, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return gap.floatValue;
+}
+
+- (CGFloat)m_safeAreaLeftGap
+{
+    NSNumber *gap = objc_getAssociatedObject(self, kUIViewLayoutMethodPropertyLeftGap);
+    if (gap == nil) {
+        if (@available(iOS 11, *)) {
+            gap = @(self.superview.safeAreaLayoutGuide.layoutFrame.origin.x);
+        } else {
+            gap = @(0);
+        }
+        objc_setAssociatedObject(self, kUIViewLayoutMethodPropertyLeftGap, gap, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return gap.floatValue;
+}
+
+- (CGFloat)m_safeAreaRightGap
+{
+    NSNumber *gap = objc_getAssociatedObject(self, kUIViewLayoutMethodPropertyRightGap);
+    if (gap == nil) {
+        if (@available(iOS 11, *)) {
+            gap = @((self.superview.mm_w - self.superview.safeAreaLayoutGuide.layoutFrame.origin.x - self.superview.safeAreaLayoutGuide.layoutFrame.size.width));
+        } else {
+            gap = @(0);
+        }
+        objc_setAssociatedObject(self, kUIViewLayoutMethodPropertyRightGap, gap, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return gap.floatValue;
+}
 #pragma mark - set_ frame
 - (MMLayout *)mm_selfLayout{
     MMLayout *layout = objc_getAssociatedObject(self, &_layoutKey);
